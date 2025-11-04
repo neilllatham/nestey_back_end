@@ -1,0 +1,66 @@
+# =============================
+# Node / Astro frontend
+# =============================
+node_modules/
+dist/
+build/
+.cache/
+.npm/
+.vite/
+.env.local
+.env.development
+.env.production
+
+# Astro build artifacts
+/.astro/
+.output/
+
+# =============================
+# Python backend
+# =============================
+venv/
+.env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# VS Code & virtual environment
+.vscode/
+.venv/
+
+# =============================
+# Logs & temp files
+# =============================
+*.log
+*.tmp
+*.bak
+*.swp
+
+# =============================
+# OS junk
+# =============================
+.DS_Store
+Thumbs.db
+
+# =============================
+# Database / secrets / keys
+# =============================
+*.db
+*.sqlite
+*.pem
+*.key
+*.crt
+.DS_Store
+.env
+# =============================
+# Project-specific
+# =============================
+# Ignore Prisma generated client if needed
+/prisma/migrations/
+prisma/dev.db
+
+# Ignore large files or temp uploads
+uploads/
+../nestey-frontend/
+../.DS_Store

@@ -1,0 +1,10 @@
+SELECT DISTINCT
+  e.employee_id,
+  e.first_name,
+  e.last_name,
+  e.base_salary
+FROM employees e
+JOIN employee_benefits eb
+ON eb.employee_id = e.employee_id
+GROUP BY e.employee_id
+LIMIT 10;
