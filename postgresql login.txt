@@ -1,0 +1,3 @@
+postgresql login
+log into nestey at terminal
+neill@MacBook-Pro-5 nestey-backend % psql -h localhost -U neill -d nestey
