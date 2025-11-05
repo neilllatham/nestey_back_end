@@ -5,6 +5,7 @@ import express from "express";
 import cors from "cors";
 import timeOffRoutes from "./routes/timeOff.js";
 import benefitsRoutes from "./routes/benefits.js";
+import chatRoutes from "./routes/chat.js";
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/timeoff", timeOffRoutes);
 app.use("/api/benefits", benefitsRoutes);
+app.use("/api/chat", chatRoutes);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () =>
