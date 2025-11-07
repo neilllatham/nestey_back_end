@@ -181,6 +181,171 @@ ${perPeriodSummary}`;
         hasContext: true
       });
     }
+
+    // 1) Open enrollment dates
+    if (
+      (msg.includes('when') || msg.includes('what') || msg.includes('dates')) &&
+      (msg.includes('open enrollment') || msg.includes('enrollment') || msg.includes('enroll'))
+    ) {
+      const enrollmentDates = await prisma.benefits_catalog.findFirst({
+        select: {
+          enrollment_start_date: true,
+          enrollment_end_date: true
+        },
+        where: {
+          enrollment_start_date: { not: null },
+          enrollment_end_date: { not: null }
+        }
+      });
+      
+      if (enrollmentDates && enrollmentDates.enrollment_start_date && enrollmentDates.enrollment_end_date) {
+        // Format dates as MM/D/YYYY
+        const formatDate = (date) => {
+          const isoString = date.toISOString().split('T')[0]; // Get YYYY-MM-DD
+          const [year, month, day] = isoString.split('-');
+          return `${parseInt(month)}/${parseInt(day)}/${year}`; // Convert to M/D/YYYY
+        };
+        
+        const startDate = formatDate(enrollmentDates.enrollment_start_date);
+        const endDate = formatDate(enrollmentDates.enrollment_end_date);
+        
+        return res.json({
+          response: `Open enrollment runs from ${startDate} through ${endDate}.`,
+          hasContext: true
+        });
+      } else {
+        return res.json({
+          response: `Open enrollment dates are not currently available. Please contact HR for more information.`,
+          hasContext: false
+        });
+      }
+    }
+
+    // 2) When can I add or change dependents
+    if (
+      (msg.includes('when') || msg.includes('how') || msg.includes('can i')) &&
+      (msg.includes('add') || msg.includes('change') || msg.includes('remove')) &&
+      (msg.includes('dependent') || msg.includes('dependant'))
+    ) {
+      // Get enrollment dates for the response
+      const enrollmentDates = await prisma.benefits_catalog.findFirst({
+        select: {
+          enrollment_start_date: true,
+          enrollment_end_date: true
+        },
+        where: {
+          enrollment_start_date: { not: null },
+          enrollment_end_date: { not: null }
+        }
+      });
+      
+      let enrollmentPeriod = "during open enrollment";
+      if (enrollmentDates && enrollmentDates.enrollment_start_date && enrollmentDates.enrollment_end_date) {
+        const formatDate = (date) => {
+          const isoString = date.toISOString().split('T')[0];
+          const [year, month, day] = isoString.split('-');
+          return `${parseInt(month)}/${parseInt(day)}/${year}`;
+        };
+        const startDate = formatDate(enrollmentDates.enrollment_start_date);
+        const endDate = formatDate(enrollmentDates.enrollment_end_date);
+        enrollmentPeriod = `during open enrollment (${startDate} through ${endDate})`;
+      }
+      
+      return res.json({
+        response: `You can add or change dependents ${enrollmentPeriod}, and within 30 days of a qualifying life event:\n\n• Marriage or Divorce\n• Birth or adoption of a child\n• Loss of other coverage\n• Death of a dependent\n• Change in your spouse's employment that affects your coverage`,
+        hasContext: true
+      });
+    }
+
+    // 3) Employee vs Employer contribution comparison
+    if (
+      (msg.includes('how much') && msg.includes('pay')) &&
+      (msg.includes('compared') || msg.includes('vs') || msg.includes('versus') || msg.includes('employer'))
+    ) {
+      const { byCategory, totals } = await getBenefitsData(employee_id);
+      
+      // Build comparison for medical, dental, vision
+      const categories = ['Medical', 'Dental', 'Vision'];
+      let comparisons = [];
+      let totalEmployee = 0;
+      let totalEmployer = 0;
+      
+      categories.forEach(category => {
+        const benefits = byCategory[category] || [];
+        if (benefits.length > 0) {
+          const categoryEmployee = benefits.reduce((sum, b) => sum + (b.employee_pays || 0), 0);
+          const categoryEmployer = benefits.reduce((sum, b) => sum + (b.employer_pays || 0), 0);
+          comparisons.push(`${category}: You pay ${usd(categoryEmployee)} • Employer pays ${usd(categoryEmployer)}`);
+          totalEmployee += categoryEmployee;
+          totalEmployer += categoryEmployer;
+        }
+      });
+      
+      if (comparisons.length === 0) {
+        return res.json({
+          response: `You don't appear to have medical, dental, or vision benefits enrolled.`,
+          hasContext: false
+        });
+      }
+      
+      const response = `Here's how your contributions compare to your employer's (per pay period):\n\n${comparisons.join('\n')}\n\n**Totals:**\nYou pay: ${usd(totalEmployee)}\nEmployer pays: ${usd(totalEmployer)}\n\nYour employer covers ${Math.round((totalEmployer / (totalEmployee + totalEmployer)) * 100)}% of your benefit costs!`;
+      
+      return res.json({
+        response: response,
+        hasContext: true
+      });
+    }
+
+    // 4) When does my coverage start?
+    if (
+      (msg.includes('when') || msg.includes('what')) &&
+      (msg.includes('coverage') || msg.includes('benefits')) &&
+      (msg.includes('start') || msg.includes('begin') || msg.includes('effective'))
+    ) {
+      // Get employee's hire date
+      const employee = await prisma.employees.findUnique({
+        where: { employee_id: employee_id },
+        select: { hire_date: true }
+      });
+      
+      if (!employee || !employee.hire_date) {
+        return res.json({
+          response: `I couldn't find your hire date. Please contact HR for information about when your coverage starts.`,
+          hasContext: false
+        });
+      }
+      
+      const hireDate = new Date(employee.hire_date);
+      const today = new Date();
+      
+      // Calculate 30 days from hire date
+      const coverageStartDate = new Date(hireDate);
+      coverageStartDate.setDate(hireDate.getDate() + 30);
+      
+      // Check if employee started less than 30 days ago
+      const daysSinceHire = Math.floor((today - hireDate) / (1000 * 60 * 60 * 24));
+      
+      // Format the coverage start date
+      const formatDate = (date) => {
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        const year = date.getFullYear();
+        return `${month}/${day}/${year}`;
+      };
+      
+      if (daysSinceHire < 30) {
+        return res.json({
+          response: `Your coverage will start on ${formatDate(coverageStartDate)} (30 days from your hire date of ${formatDate(hireDate)}).`,
+          hasContext: true
+        });
+      } else {
+        return res.json({
+          response: `Your coverage started on ${formatDate(coverageStartDate)} (30 days after your hire date of ${formatDate(hireDate)}).`,
+          hasContext: true
+        });
+      }
+    }
+
     // A) How many pay periods so far this year
     if (
       (msg.includes('how many') && msg.includes('pay period')) ||
@@ -263,7 +428,12 @@ ${message}`;
 
   } catch (error) {
     console.error('Chat error:', error);
-    res.status(500).json({ error: 'Failed to process chat request' });
+    console.error('Error stack:', error.stack);
+    console.error('Error message:', error.message);
+    res.status(500).json({ 
+      error: 'Failed to process chat request',
+      details: error.message 
+    });
   }
 });
 

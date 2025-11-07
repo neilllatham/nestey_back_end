@@ -44,13 +44,14 @@ model benefits_catalog {
   employee_contribution      Decimal?      @db.Decimal(3, 2)
   dependent_coverage_allowed Boolean?
   eligibility_criteria       String?       @db.VarChar
-  enrollment_window          String?       @db.VarChar
   created_at                 DateTime?     @db.Date
   updated_at                 DateTime?     @db.Date
   benefit_plan_id            Int?
   employee_pays              Decimal?      @db.Decimal(10, 2)
   employer_pays              Decimal?      @db.Decimal(10, 2)
   total_plan_cost            Decimal?      @db.Decimal(10, 2)
+  enrollment_start_date      DateTime?     @default(dbgenerated("'2025-11-01'::date")) @db.Date
+  enrollment_end_date        DateTime?     @default(dbgenerated("'2025-11-30'::date")) @db.Date
   benefit_plan               benefit_plan? @relation(fields: [benefit_plan_id], references: [benefit_plan_id], onDelete: NoAction, onUpdate: NoAction)
 }
 

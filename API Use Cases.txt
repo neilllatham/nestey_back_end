@@ -1,0 +1,10 @@
+API Use Cases:
+Benefits:
+"My benefits": shows what medical, dental and vision plans
+"what have i paid": shows how much ytd an employee and employer has paid and notes paid period as bi weekly
+"medical details": show medical plan name and description, how much the employee pays and the employeer
+"when is enrollment": shows the window as 11/1/2025 through 11/30/2025
+“When can I add or remove a dependent?”	Life events (marriage, birth, loss of coverage).
+“How much do I pay vs. what the company pays?”	Cost breakdown per pay period (employer vs. employee contribution).
+“When does my coverage start?”	Waiting periods or effective dates tied to hire date.
+“When is open enrollment?”	Annual window for plan changes and key deadlines.
