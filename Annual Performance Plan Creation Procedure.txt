@@ -1,0 +1,88 @@
+Annual Performance Plan Creation Procedure:
+
+🧩 Procedure: Create Annual Performance Plan
+Purpose
+The Create Annual Performance Plan procedure establishes a manager’s annual review record and their strategic objectives and goals for the new fiscal year.
+These manager goals serve as the foundation for all downstream employee goal-setting and mid-year/annual reviews.
+
+Process Overview
+
+
+Identify the active review cycle (e.g., FY2025 Annual).
+
+
+Create a new employee review record for the manager.
+
+
+Insert objectives and goals under each corporate strategy (Customer, People, Shareholder).
+
+
+Verify the plan to ensure all goals are linked correctly.
+
+
+
+Example Implementation
+------------------------------------------------------------
+-- PROCEDURE: Create Annual Performance Plan
+------------------------------------------------------------
+
+-- Step 1: Confirm the active review cycle
+SELECT review_cycle_id, name, cycle_type
+FROM review_cycles
+WHERE is_active = TRUE;
+
+-- Example result: review_cycle_id = 1, name = 'FY2025 Annual'
+
+-- Step 2: Create the manager’s review record
+INSERT INTO employee_reviews (employee_id, review_cycle_id, review_status)
+VALUES (301, 1, 'Draft');  -- Nader Logos, Manager
+
+-- Step 3: Add strategic goals and objectives
+INSERT INTO employee_goals (
+  review_id, strategy_id, objective, goal_description, target_date,
+  employee_rating, manager_rating, employee_comments, manager_comments
+)
+VALUES
+-- Strategy: Customer
+(1, 1, 'Enhance customer experience', 
+ 'Achieve a 15% increase in customer satisfaction scores by end of FY25', 
+ '2025-12-31', NULL, NULL, NULL, NULL),
+
+-- Strategy: People
+(1, 2, 'Improve employee engagement', 
+ 'Implement quarterly feedback surveys and increase engagement by 10%', 
+ '2025-12-31', NULL, NULL, NULL, NULL),
+
+-- Strategy: Shareholder
+(1, 3, 'Drive operational efficiency', 
+ 'Reduce operating cost per transaction to $5.00 through automation initiatives', 
+ '2025-12-31', NULL, NULL, NULL, NULL);
+
+-- Step 4: Verify
+SELECT 
+  e.full_name AS manager_name,
+  rc.name AS review_cycle,
+  s.strategy_name,
+  g.objective,
+  g.goal_description,
+  g.target_date
+FROM employee_goals g
+JOIN employee_reviews er ON g.review_id = er.review_id
+JOIN employees e ON er.employee_id = e.employee_id
+JOIN strategies s ON g.strategy_id = s.strategy_id
+JOIN review_cycles rc ON er.review_cycle_id = rc.review_cycle_id
+WHERE e.employee_id = 301;
+
+
+Outcome
+This process creates:
+
+
+A manager review record tied to the annual cycle.
+
+
+A set of strategic objectives and goals mapped to the organization’s key strategies.
+
+
+A verified dataset ready for employee goal alignment during mid-year planning.
+
