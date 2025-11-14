@@ -1,0 +1,9 @@
+PUT http://localhost:3001/api/reviews/2
+Content-Type: application/json
+
+{
+  "employee_overall_comments": "Testing overall comments",
+  "manager_overall_comments": "Manager comment test",
+  "employee_overall_rating": 4,
+  "manager_overall_rating": 5
+}

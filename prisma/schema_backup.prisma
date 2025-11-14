@@ -1,0 +1,285 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model applications {
+  application_id Int           @id @default(autoincrement())
+  candidate_id   Int?
+  job_posting_id Int?
+  source         String?       @db.VarChar
+  status         String?       @db.VarChar
+  applied_date   DateTime?     @db.Date
+  last_updated   DateTime?     @db.Timestamp(6)
+  candidates     candidates?   @relation(fields: [candidate_id], references: [candidate_id], onDelete: NoAction, onUpdate: NoAction)
+  job_postings   job_postings? @relation(fields: [job_posting_id], references: [job_posting_id], onDelete: NoAction, onUpdate: NoAction)
+  interviews     interviews[]
+  job_offers     job_offers[]
+}
+
+model benefit_plan {
+  benefit_plan_id       Int                 @id @default(autoincrement())
+  plan_name             String?             @db.VarChar
+  coverage_level        String?             @db.VarChar
+  region                String?             @db.VarChar
+  employer_contribution Decimal?            @db.Decimal(3, 2)
+  employee_contribution Decimal?            @db.Decimal(3, 2)
+  effective_date        DateTime?           @db.Date
+  expiry_date           DateTime?           @db.Date
+  type                  String?             @db.VarChar
+  benefits_catalog      benefits_catalog[]
+  employee_benefits     employee_benefits[]
+}
+
+model benefits_catalog {
+  benefit_catalog_id         Int           @id @default(autoincrement())
+  benefit_name               String?       @db.VarChar
+  benefit_category           String?       @db.VarChar
+  description                String?       @db.VarChar
+  employer_contribution      Decimal?      @db.Decimal(3, 2)
+  employee_contribution      Decimal?      @db.Decimal(3, 2)
+  dependent_coverage_allowed Boolean?
+  eligibility_criteria       String?       @db.VarChar
+  created_at                 DateTime?     @db.Date
+  updated_at                 DateTime?     @db.Date
+  benefit_plan_id            Int?
+  employee_pays              Decimal?      @db.Decimal(10, 2)
+  employer_pays              Decimal?      @db.Decimal(10, 2)
+  total_plan_cost            Decimal?      @db.Decimal(10, 2)
+  enrollment_start_date      DateTime?     @default(dbgenerated("'2025-11-01'::date")) @db.Date
+  enrollment_end_date        DateTime?     @default(dbgenerated("'2025-11-30'::date")) @db.Date
+  benefit_plan               benefit_plan? @relation(fields: [benefit_plan_id], references: [benefit_plan_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model candidates {
+  candidate_id     Int            @id @default(autoincrement())
+  first_name       String?        @db.VarChar
+  last_name        String?        @db.VarChar
+  email            String?        @db.VarChar
+  phone            String?        @db.VarChar
+  resume_url       String?        @db.VarChar
+  linkedin_profile String?        @db.VarChar
+  referred_by      Int?
+  current_company  String?        @db.VarChar
+  notes            String?
+  created_at       DateTime?      @db.Timestamp(6)
+  updated_at       DateTime?      @db.Timestamp(6)
+  applications     applications[]
+  employees        employees?     @relation(fields: [referred_by], references: [employee_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model departments {
+  department_id   Int            @id @default(autoincrement())
+  department_name String?        @db.VarChar
+  function_id     Int?
+  functions       functions?     @relation(fields: [function_id], references: [function_id], onDelete: NoAction, onUpdate: NoAction)
+  employees       employees[]
+  job_postings    job_postings[]
+  roles           roles[]
+}
+
+model employee_benefits {
+  employee_benefit_id Int           @id @default(autoincrement())
+  employee_id         Int?
+  benefit_plan_id     Int?
+  dependants          Int?
+  effective_date      DateTime?     @db.Date
+  expiry_date         DateTime?     @db.Date
+  date_created        DateTime?     @db.Date
+  date_updated        DateTime?     @db.Date
+  benefit_plan        benefit_plan? @relation(fields: [benefit_plan_id], references: [benefit_plan_id], onDelete: NoAction, onUpdate: NoAction)
+  employees           employees?    @relation(fields: [employee_id], references: [employee_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model employees {
+  employee_id           Int                 @id @default(autoincrement())
+  employee_number       String?             @db.VarChar
+  first_name            String?             @db.VarChar
+  middle_initial        String?             @db.VarChar
+  last_name             String?             @db.VarChar
+  full_name             String?             @db.VarChar
+  preferred_name        String?             @db.VarChar
+  job_title             String?             @db.VarChar
+  email                 String?             @db.VarChar
+  hire_date             DateTime?           @db.Timestamp(6)
+  department_id         Int?
+  role_id               Int?
+  manager_id            Int?
+  status                String?             @db.VarChar
+  base_salary           Decimal?            @db.Decimal(10, 2)
+  bonus_eligible        Boolean?
+  target_bonus          Decimal?            @db.Decimal(10, 2)
+  commission_eligible   Boolean?
+  commission_target     Decimal?            @db.Decimal(4, 2)
+  compensation_currency String?             @db.VarChar
+  date_of_birth         DateTime?           @db.Date
+  employment_type       String?             @db.VarChar
+  gender                String?             @db.VarChar
+  home_address          String?             @db.VarChar
+  mobile_number         String?             @db.VarChar
+  hours_per_week        Decimal?            @db.Decimal(3, 1)
+  candidates            candidates[]
+  employee_benefits     employee_benefits[]
+  employee_reviews      employee_reviews[]
+  departments           departments?        @relation(fields: [department_id], references: [department_id], onDelete: NoAction, onUpdate: NoAction)
+  employees             employees?          @relation("employeesToemployees", fields: [manager_id], references: [employee_id], onDelete: NoAction, onUpdate: NoAction)
+  other_employees       employees[]         @relation("employeesToemployees")
+  roles                 roles?              @relation(fields: [role_id], references: [role_id], onDelete: NoAction, onUpdate: NoAction)
+  interviews            interviews[]
+  job_postings          job_postings[]
+  time_off_accruals     time_off_accruals[]
+  time_off_requests     time_off_requests[]
+}
+
+model functions {
+  function_id   Int           @id @default(autoincrement())
+  function_name String?       @db.VarChar
+  departments   departments[]
+}
+
+model interviews {
+  interview_id   Int           @id @default(autoincrement())
+  application_id Int?
+  interviewer_id Int?
+  interview_date DateTime?     @db.Timestamp(6)
+  interview_type String?       @db.VarChar
+  feedback       String?
+  rating         Int?
+  decision       String?       @db.VarChar
+  created_at     DateTime?     @db.Timestamp(6)
+  updated_at     DateTime?     @db.Timestamp(6)
+  applications   applications? @relation(fields: [application_id], references: [application_id], onDelete: NoAction, onUpdate: NoAction)
+  employees      employees?    @relation(fields: [interviewer_id], references: [employee_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model job_families {
+  job_family_id   Int     @id @default(autoincrement())
+  job_family_name String? @db.VarChar
+  description     String? @db.VarChar
+  roles           roles[]
+}
+
+model job_offers {
+  offer_id        Int           @id @default(autoincrement())
+  application_id  Int?
+  offered_role_id Int?
+  offered_salary  Decimal?      @db.Decimal(10, 2)
+  offered_bonus   Decimal?      @db.Decimal(10, 2)
+  start_date      DateTime?     @db.Date
+  offer_status    String?       @db.VarChar
+  sent_date       DateTime?     @db.Date
+  accepted_date   DateTime?     @db.Date
+  created_at      DateTime?     @db.Timestamp(6)
+  updated_at      DateTime?     @db.Timestamp(6)
+  applications    applications? @relation(fields: [application_id], references: [application_id], onDelete: NoAction, onUpdate: NoAction)
+  roles           roles?        @relation(fields: [offered_role_id], references: [role_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model job_postings {
+  job_posting_id    Int            @id @default(autoincrement())
+  title             String?        @db.VarChar
+  department_id     Int?
+  role_id           Int?
+  hiring_manager_id Int?
+  location          String?        @db.VarChar
+  employment_type   String?        @db.VarChar
+  description       String?
+  requirements      String?
+  salary_range_min  Decimal?       @db.Decimal(10, 2)
+  salary_range_max  Decimal?       @db.Decimal(10, 2)
+  currency          String?        @db.VarChar
+  status            String?        @db.VarChar
+  date_posted       DateTime?      @db.Date
+  date_closed       DateTime?      @db.Date
+  created_at        DateTime?      @db.Timestamp(6)
+  updated_at        DateTime?      @db.Timestamp(6)
+  applications      applications[]
+  departments       departments?   @relation(fields: [department_id], references: [department_id], onDelete: NoAction, onUpdate: NoAction)
+  employees         employees?     @relation(fields: [hiring_manager_id], references: [employee_id], onDelete: NoAction, onUpdate: NoAction)
+  roles             roles?         @relation(fields: [role_id], references: [role_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model roles {
+  role_id        Int            @id @default(autoincrement())
+  role_name      String?        @db.VarChar
+  role_level     String?        @db.VarChar(20)
+  parent_role_id Int?
+  job_family_id  Int?
+  description    String?        @db.VarChar
+  date_created   DateTime?      @default(dbgenerated("CURRENT_DATE")) @db.Date
+  date_updated   DateTime?      @default(dbgenerated("CURRENT_DATE")) @db.Date
+  department_id  Int?
+  employees      employees[]
+  job_offers     job_offers[]
+  job_postings   job_postings[]
+  departments    departments?   @relation(fields: [department_id], references: [department_id], onDelete: NoAction, onUpdate: NoAction)
+  job_families   job_families?  @relation(fields: [job_family_id], references: [job_family_id], onDelete: NoAction, onUpdate: NoAction)
+  roles          roles?         @relation("rolesToroles", fields: [parent_role_id], references: [role_id], onDelete: NoAction, onUpdate: NoAction)
+  other_roles    roles[]        @relation("rolesToroles")
+}
+
+model time_off_accruals {
+  accrual_id     Int        @id @default(autoincrement())
+  employee_id    Int?
+  type           String?    @db.VarChar
+  year           Int?
+  accrued_days   Decimal?   @db.Decimal(5, 1)
+  used_days      Decimal?   @default(0.0) @db.Decimal(5, 1)
+  remaining_days Decimal?   @db.Decimal(5, 1)
+  last_updated   DateTime?  @default(dbgenerated("CURRENT_DATE")) @db.Date
+  employees      employees? @relation(fields: [employee_id], references: [employee_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([employee_id, type, year])
+}
+
+model time_off_backup {
+  time_off_id      Int?
+  employee_id      Int?
+  start_date       DateTime? @db.Date
+  end_date         DateTime? @db.Date
+  type             String?   @db.VarChar
+  time_off_amount  Decimal?  @db.Decimal(5, 1)
+  time_off_accrued Decimal?  @db.Decimal(5, 1)
+  time_off_balance Decimal?  @db.Decimal(5, 1)
+  date_created     DateTime? @db.Date
+  date_updated     DateTime? @db.Date
+
+  @@ignore
+}
+
+model time_off_requests {
+  request_id     Int        @id @default(autoincrement())
+  employee_id    Int?
+  type           String?    @db.VarChar
+  start_date     DateTime?  @db.Date
+  end_date       DateTime?  @db.Date
+  days_requested Decimal?   @db.Decimal(5, 1)
+  status         String?    @default("Approved") @db.VarChar
+  created_at     DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at     DateTime?  @default(now()) @db.Timestamp(6)
+  employees      employees? @relation(fields: [employee_id], references: [employee_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+//
+// ⭐⭐⭐ REAL REVIEW MODEL — MATCHES TABLE public.employee_reviews ⭐⭐⭐
+//
+
+model employee_reviews {
+  review_id                 Int       @id @default(autoincrement())
+  employee_id               Int
+  review_cycle_id           Int
+  review_status             String?
+  submitted_at              DateTime?
+  finalized_at              DateTime?
+  employee_overall_comments String?
+  manager_overall_comments  String?
+  employee_overall_rating   Int?
+  manager_overall_rating    Int?
+  employees                 employees @relation(fields: [employee_id], references: [employee_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("employee_reviews") // MUST MATCH REAL TABLE NAME
+}

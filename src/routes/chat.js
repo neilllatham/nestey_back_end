@@ -437,4 +437,10 @@ ${message}`;
   }
 });
 
+// Simple test route
+router.get("/test", (req, res) => {
+  res.send("Chat route OK");
+});
+
+
 export default router;

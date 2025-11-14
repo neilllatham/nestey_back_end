@@ -1,3 +1,5 @@
 postgresql login
 log into nestey at terminal
 neill@MacBook-Pro-5 nestey-backend % psql -h localhost -U neill -d nestey
+
+dump whole schema: neill@MacBook-Pro-5 nestey-backend % pg_dump -s -U neill -d nestey > schema.sql
