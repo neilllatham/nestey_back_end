@@ -264,15 +264,14 @@ model employee_goals {
   goal_id           Int       @id @default(autoincrement())
   review_id         Int
   strategy_id       Int?
-  objective         String?
-  goal_description  String?
+  objective         String
+  goal_description  String
   target_date       DateTime? @db.Date
   employee_rating   Int?
   manager_rating    Int?
-  employee_comments String?
-  manager_comments  String?
   created_at        DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp(6)
   updated_at        DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @db.Timestamp(6)
+  status            String?   @default("active")
 
   // Relationships
   employee_reviews  employee_reviews @relation(fields: [review_id], references: [review_id], onDelete: Cascade, onUpdate: NoAction)

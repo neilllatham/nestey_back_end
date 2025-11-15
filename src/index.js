@@ -8,6 +8,7 @@ import benefitsRoutes from "./routes/benefits.js";
 import chatRoutes from "./routes/chat.js";
 import personalRoutes from "./routes/personal.js";
 import reviewRoutes from "./routes/reviews.js";  // <-- Add reviews
+import goalsRoutes from "./routes/goals.js";     // <-- Add goals
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use("/api/benefits", benefitsRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/personal", personalRoutes);
 app.use("/api/reviews", reviewRoutes); // <-- Correct prefix
+app.use("/api/goals", goalsRoutes);    // <-- Add goals API
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () =>

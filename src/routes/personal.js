@@ -39,7 +39,7 @@ router.get('/', async (req, res) => {
             role_name: true
           }
         },
-        employees: {
+        manager: {
           select: {
             full_name: true,
             job_title: true
@@ -62,8 +62,8 @@ router.get('/', async (req, res) => {
       department_name: employee.departments?.department_name || null,
       function_name: employee.departments?.functions?.function_name || null,
       role_name: employee.roles?.role_name || null,
-      manager_name: employee.employees?.full_name || null,
-      manager_title: employee.employees?.job_title || null
+      manager_name: employee.manager?.full_name || null,
+      manager_title: employee.manager?.job_title || null
     };
 
     res.json(personalInfo);
