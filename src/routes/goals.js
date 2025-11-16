@@ -63,6 +63,8 @@ router.get('/', async (req, res) => {
       });
     }
 
+    console.log('Employee review found:', employeeReview);
+
     // Get manager's goals (if employee has a manager)
     let managerGoals = [];
     if (employee.manager_id) {
@@ -96,22 +98,19 @@ router.get('/', async (req, res) => {
 
     // For end-of-year state, also get competencies and overall review data
     if (state === 'end-year') {
+      // Skip competency logic for now, focus on goals only
+      competencies = [];
+      /*
       // Get competencies based on employee's role level
       const roleCompetencies = await prisma.competency_definitions.findMany({
         where: {
           role_level_code: employee.roles?.role_level_code
-        },
-        include: {
-          competency: true
         }
       });
 
       // Get employee competency ratings
       const employeeCompetencies = await prisma.employee_competencies.findMany({
-        where: { review_id: employeeReview.review_id },
-        include: {
-          competency: true
-        }
+        where: { review_id: employeeReview.review_id }
       });
 
       // Merge competencies with employee ratings
@@ -131,6 +130,7 @@ router.get('/', async (req, res) => {
           manager_comments: empComp?.manager_comments || null
         };
       });
+      */
 
       reviewData = {
         review_id: employeeReview.review_id,
@@ -168,6 +168,14 @@ router.get('/', async (req, res) => {
         cycle_type: currentCycle.cycle_type,
         status: currentCycle.status
       },
+      review: employeeReview ? {
+        review_id: employeeReview.review_id,
+        review_status: employeeReview.review_status,
+        review_phase: employeeReview.review_phase
+      } : null,
+      reviewPhase: employeeReview.review_phase || 'build-plan',
+      canEditGoals: true,  // Allow editing in all phases for free navigation
+      canRateGoals: true,  // Allow rating in all phases for free navigation
       managerGoals: managerGoals.map(goal => ({
         goal_id: goal.goal_id,
         strategy_name: goal.strategies?.strategy_name || null,
@@ -192,7 +200,7 @@ router.get('/', async (req, res) => {
         updated_at: goal.updated_at
       })),
       competencies,
-      review: reviewData,
+      reviewData,
       strategies: strategies.map(s => ({
         strategy_id: s.strategy_id,
         strategy_name: s.strategy_name,
@@ -340,6 +348,86 @@ router.delete('/:goalId', async (req, res) => {
 
   } catch (error) {
     console.error('Error deleting goal:', error);
+    res.status(500).json({ 
+      error: 'Internal server error', 
+      message: error.message 
+    });
+  }
+});
+
+
+
+// PUT /api/goals/:goalId/employee-rating - Update employee rating for a goal
+router.put('/:goalId/employee-rating', async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const { employee_rating } = req.body;
+
+    if (!employee_rating || employee_rating < 1 || employee_rating > 5) {
+      return res.status(400).json({ error: 'Employee rating must be between 1 and 5' });
+    }
+
+    const updatedGoal = await prisma.employee_goals.update({
+      where: { goal_id: parseInt(goalId) },
+      data: {
+        employee_rating: parseInt(employee_rating),
+        updated_at: new Date()
+      },
+      include: {
+        strategies: true
+      }
+    });
+
+    console.log(`Employee rating updated for goal ${goalId}: ${employee_rating}`);
+    res.json({
+      goal_id: updatedGoal.goal_id,
+      employee_rating: updatedGoal.employee_rating,
+      updated_at: updatedGoal.updated_at
+    });
+
+  } catch (error) {
+    console.error('Error updating employee rating:', error);
+    res.status(500).json({ 
+      error: 'Internal server error', 
+      message: error.message 
+    });
+  }
+});
+
+// PUT /api/goals/:goalId/manager-rating - Update manager rating for a specific goal
+router.put('/:goalId/manager-rating', async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const { manager_rating } = req.body;
+
+    console.log(`Updating manager rating for goal ${goalId} to ${manager_rating}`);
+
+    // Validate manager_rating
+    if (!manager_rating || manager_rating < 1 || manager_rating > 5) {
+      return res.status(400).json({ 
+        error: 'Invalid manager rating', 
+        message: 'Manager rating must be between 1 and 5' 
+      });
+    }
+
+    // Update the goal with manager rating
+    const updatedGoal = await prisma.employee_goals.update({
+      where: { goal_id: parseInt(goalId) },
+      data: { 
+        manager_rating: parseInt(manager_rating),
+        updated_at: new Date()
+      }
+    });
+
+    console.log(`Manager rating updated for goal ${goalId}: ${manager_rating}`);
+    res.json({
+      goal_id: updatedGoal.goal_id,
+      manager_rating: updatedGoal.manager_rating,
+      updated_at: updatedGoal.updated_at
+    });
+
+  } catch (error) {
+    console.error('Error updating manager rating:', error);
     res.status(500).json({ 
       error: 'Internal server error', 
       message: error.message 
