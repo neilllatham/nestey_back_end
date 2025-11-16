@@ -291,7 +291,206 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /api/goals/:goalId - Update a goal
+// PUT /api/goals/overall-employee-rating - Save employee overall rating
+router.put('/overall-employee-rating', async (req, res) => {
+  try {
+    const { employee_id, overall_employee_rating } = req.body;
+
+    if (!employee_id || overall_employee_rating === undefined) {
+      return res.status(400).json({ error: 'employee_id and overall_employee_rating are required' });
+    }
+
+    console.log(`Saving overall employee rating for employee ${employee_id}:`, overall_employee_rating);
+
+    // Find the employee's current review
+    const employeeReview = await prisma.employee_reviews.findFirst({
+      where: {
+        employee_id: parseInt(employee_id),
+        review_cycles: {
+          is_active: true,
+          status: 'Open'
+        }
+      }
+    });
+
+    if (!employeeReview) {
+      return res.status(404).json({ error: 'Employee review not found' });
+    }
+
+    // Update the employee overall rating
+    const updatedReview = await prisma.employee_reviews.update({
+      where: { review_id: employeeReview.review_id },
+      data: {
+        employee_overall_rating: parseInt(overall_employee_rating),
+        updated_at: new Date()
+      }
+    });
+
+    res.json({
+      success: true,
+      review_id: updatedReview.review_id,
+      employee_overall_rating: updatedReview.employee_overall_rating
+    });
+
+  } catch (error) {
+    console.error('Error saving overall employee rating:', error);
+    res.status(500).json({ 
+      error: 'Internal server error', 
+      message: error.message 
+    });
+  }
+});
+
+// PUT /api/goals/overall-manager-rating - Save manager overall rating
+router.put('/overall-manager-rating', async (req, res) => {
+  try {
+    const { employee_id, overall_manager_rating } = req.body;
+
+    if (!employee_id || overall_manager_rating === undefined) {
+      return res.status(400).json({ error: 'employee_id and overall_manager_rating are required' });
+    }
+
+    console.log(`Saving overall manager rating for employee ${employee_id}:`, overall_manager_rating);
+
+    // Find the employee's current review
+    const employeeReview = await prisma.employee_reviews.findFirst({
+      where: {
+        employee_id: parseInt(employee_id),
+        review_cycles: {
+          is_active: true,
+          status: 'Open'
+        }
+      }
+    });
+
+    if (!employeeReview) {
+      return res.status(404).json({ error: 'Employee review not found' });
+    }
+
+    // Update the manager overall rating
+    const updatedReview = await prisma.employee_reviews.update({
+      where: { review_id: employeeReview.review_id },
+      data: {
+        manager_overall_rating: parseInt(overall_manager_rating),
+        updated_at: new Date()
+      }
+    });
+
+    res.json({
+      success: true,
+      review_id: updatedReview.review_id,
+      manager_overall_rating: updatedReview.manager_overall_rating
+    });
+
+  } catch (error) {
+    console.error('Error saving overall manager rating:', error);
+    res.status(500).json({ 
+      error: 'Internal server error', 
+      message: error.message 
+    });
+  }
+});
+
+// PUT /api/goals/overall-employee-comments - Save employee overall comments
+router.put('/overall-employee-comments', async (req, res) => {
+  try {
+    const { employee_id, employee_overall_comments } = req.body;
+
+    if (!employee_id || employee_overall_comments === undefined) {
+      return res.status(400).json({ error: 'employee_id and employee_overall_comments are required' });
+    }
+
+    console.log(`Saving overall employee comments for employee ${employee_id}`);
+
+    // Find the employee's current review
+    const employeeReview = await prisma.employee_reviews.findFirst({
+      where: {
+        employee_id: parseInt(employee_id),
+        review_cycles: {
+          is_active: true,
+          status: 'Open'
+        }
+      }
+    });
+
+    if (!employeeReview) {
+      return res.status(404).json({ error: 'Employee review not found' });
+    }
+
+    // Update the employee overall comments
+    const updatedReview = await prisma.employee_reviews.update({
+      where: { review_id: employeeReview.review_id },
+      data: {
+        employee_overall_comments: employee_overall_comments,
+        updated_at: new Date()
+      }
+    });
+
+    res.json({
+      success: true,
+      review_id: updatedReview.review_id,
+      employee_overall_comments: updatedReview.employee_overall_comments
+    });
+
+  } catch (error) {
+    console.error('Error saving overall employee comments:', error);
+    res.status(500).json({ 
+      error: 'Internal server error', 
+      message: error.message 
+    });
+  }
+});
+
+// PUT /api/goals/overall-manager-comments - Save manager overall comments
+router.put('/overall-manager-comments', async (req, res) => {
+  try {
+    const { employee_id, manager_overall_comments } = req.body;
+
+    if (!employee_id || manager_overall_comments === undefined) {
+      return res.status(400).json({ error: 'employee_id and manager_overall_comments are required' });
+    }
+
+    console.log(`Saving overall manager comments for employee ${employee_id}`);
+
+    // Find the employee's current review
+    const employeeReview = await prisma.employee_reviews.findFirst({
+      where: {
+        employee_id: parseInt(employee_id),
+        review_cycles: {
+          is_active: true,
+          status: 'Open'
+        }
+      }
+    });
+
+    if (!employeeReview) {
+      return res.status(404).json({ error: 'Employee review not found' });
+    }
+
+    // Update the manager overall comments
+    const updatedReview = await prisma.employee_reviews.update({
+      where: { review_id: employeeReview.review_id },
+      data: {
+        manager_overall_comments: manager_overall_comments,
+        updated_at: new Date()
+      }
+    });
+
+    res.json({
+      success: true,
+      review_id: updatedReview.review_id,
+      manager_overall_comments: updatedReview.manager_overall_comments
+    });
+
+  } catch (error) {
+    console.error('Error saving overall manager comments:', error);
+    res.status(500).json({ 
+      error: 'Internal server error', 
+      message: error.message 
+    });
+  }
+});
+
 router.put('/:goalId', async (req, res) => {
   try {
     const { goalId } = req.params;
