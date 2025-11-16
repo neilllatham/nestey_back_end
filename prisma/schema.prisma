@@ -249,6 +249,9 @@ model employee_reviews {
   manager_overall_comments  String?
   employee_overall_rating   Int?
   manager_overall_rating    Int?
+  review_phase             String?   @default("build-plan") @db.VarChar
+  mid_year_completed_at    DateTime? @db.Timestamp(6)
+  end_year_completed_at    DateTime? @db.Timestamp(6)
 
   // Relationships
   employees               employees             @relation(fields: [employee_id], references: [employee_id], onDelete: NoAction, onUpdate: NoAction)
