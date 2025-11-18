@@ -9,6 +9,7 @@ import chatRoutes from "./routes/chat.js";
 import personalRoutes from "./routes/personal.js";
 import reviewRoutes from "./routes/reviews.js";  // <-- Add reviews
 import goalsRoutes from "./routes/goals.js";     // <-- Add goals
+import organizationRoutes from "./routes/organization.js"; // <-- Add organization
 
 const app = express();
 
@@ -26,6 +27,9 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/personal", personalRoutes);
 app.use("/api/reviews", reviewRoutes); // <-- Correct prefix
 app.use("/api/goals", goalsRoutes);    // <-- Add goals API
+app.use("/api/org", organizationRoutes); // official org API
+
+// Removed temporary /api/org-test endpoint now that /api/org is available
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () =>
